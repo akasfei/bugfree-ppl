@@ -1,0 +1,4 @@
+FIRST(decl) = { ID }
+FIRST(idList1) = { #, COMMA }
+FIRST(idList) = { ID }
+

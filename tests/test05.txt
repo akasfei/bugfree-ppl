@@ -1,0 +1,12 @@
+ZERO ONE #
+S A B C #
+S -> A B #
+S -> C #
+A -> ZERO B #
+A -> C #
+B -> ONE #
+B -> A ZERO #
+C -> A C #
+C -> C ONE #
+##
+

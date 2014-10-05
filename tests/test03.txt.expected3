@@ -1,0 +1,6 @@
+FOLLOW(s) = { $ }
+FOLLOW(b) = { END }
+FOLLOW(c) = { COLON, EQUAL }
+FOLLOW(d) = { COMMA, DIV, END }
+FOLLOW(e) = { END }
+

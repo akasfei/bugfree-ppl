@@ -1,0 +1,5 @@
+FIRST(S) = { ZERO }
+FIRST(A) = { ZERO }
+FIRST(B) = { ONE, ZERO }
+FIRST(C) = { ZERO }
+

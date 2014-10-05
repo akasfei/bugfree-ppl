@@ -1,0 +1,4 @@
+FOLLOW(decl) = { $ }
+FOLLOW(idList1) = { COLON }
+FOLLOW(idList) = { COLON }
+

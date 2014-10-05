@@ -1,0 +1,11 @@
+a b #
+S A B #
+S -> A a #
+S -> B b #
+A -> A B #
+B -> B b #
+B -> #
+##
+
+Note that a and b are terminals and S, A and B are non-terminals
+
