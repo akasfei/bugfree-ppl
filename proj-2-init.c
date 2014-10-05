@@ -271,3 +271,43 @@ GRAMMAR * newGrammar ()
   // printf("DEBUG: Grammar Inited\n");
   return g;
 }
+
+void deleteGrammar (GRAMMAR * g)
+{
+  TERM * t, * ttmp;
+  NONTERM * nt, * nttmp;
+  RULE * r, * rtmp;
+  SYMBOL * s, * stmp;
+  free(__terms__);
+  t = g->t;
+  while (t != NULL)
+  {
+    free(t->name);
+    ttmp = t->next;
+    free(t);
+    t = ttmp;
+  }
+  nt = g->nt;
+  while (nt != NULL)
+  {
+    free(nt->name);
+    r = nt->rules;
+    while (r != NULL)
+    {
+      s = r->symbols;
+      while (s != NULL)
+      {
+        stmp = s->next;
+        free(s);
+        s = stmp;
+      }
+      rtmp = r->next;
+      free(r);
+      r = rtmp;
+    }
+    nttmp = nt->next;
+    free(nt);
+    nt = nttmp;
+  }
+  free(g);
+}

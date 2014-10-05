@@ -32,5 +32,6 @@ int main (int argc, char *argv[])
       printf("Invalid argument: task number\n1 String Generation Test\n2 FIRST Sets\n3 FOLLOW Sets\n");
       return 2;
   }
+  deleteGrammar(g);
   return 0;
 }

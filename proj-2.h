@@ -49,6 +49,7 @@ typedef struct result
 }RESULT;
 
 GRAMMAR * newGrammar (void);
+void deleteGrammar (GRAMMAR *);
 TERM * getTerm(GRAMMAR *, char *);
 NONTERM * getNonTerm(GRAMMAR *, char *);
 SYMBOL * getSymbol(GRAMMAR *, char *);
