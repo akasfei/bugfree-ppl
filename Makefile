@@ -1,9 +1,11 @@
+SHELL := /usr/bin/bash
+
 src = *.c
 hdr = *.h
 dep = $(hdr) $(src)
 bin = a.out
 
-all: proj2
+all: proj3
 
 proj1:
 	gcc -Wall proj-1.c lexer.c -o proj-1.o
@@ -28,6 +30,24 @@ test2:
 	./proj-2.o 3 < tests/test03.txt
 	./proj-2.o 3 < tests/test04.txt
 	./proj-2.o 3 < tests/test05.txt
+
+proj3:
+	gcc -Wall semantic.c proj-3.c -o a.out
+
+test3:
+	gcc -Wall semantic.c proj-3.c -o proj-3.o
+	for f in $(wildcard ./tests-3/*.txt); do \
+	  echo "Testing `basename $$f`"; \
+		./proj-3.o < $$f | grep -v DEBUG > ./tests-3/`basename $$f`.o; \
+		diff -Bw ./tests-3/`basename $$f`.o ./tests-3/`basename $$f`.expected; \
+	done
+
+print3:
+	gcc -Wall semantic.c proj-3.c -o proj-3.o
+	for f in $(wildcard ./tests-3/*.txt); do \
+		echo "Testing `basename $$f`"; \
+		./proj-3.o < $$f; \
+	done
 
 clean:
 	rm $(bin);
