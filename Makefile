@@ -48,10 +48,10 @@ print3:
 	done
 
 proj4:
-  gcc -Wall compiler.c proj-4.c -o a.out
+	gcc -Wall compiler.c proj-4.c -o a.out
 
 test4:
-  gcc -Wall compiler.c proj-4.c -o proj-4.o
+	gcc -Wall compiler.c proj-4.c -o proj-4.o
 	for f in $(wildcard ./tests-4/*.txt); do \
 	  echo "Testing `basename $$f`"; \
 		./proj-4.o < $$f | grep -v DEBUG > ./tests-4/`basename $$f`.o; \
