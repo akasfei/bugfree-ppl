@@ -60,7 +60,7 @@ struct varNode * var_create(char * id)
 struct statementNode * parse_var_section();
   struct statementNode * parse_id_list();
 struct statementNode * parse_body();
-  struct statementNode * parse_stmt_list();
+  struct statementNode * parse_stmt_list(struct statementNode *);
     struct statementNode * parse_stmt(struct statementNode *);
       struct statementNode * parse_assign_stmt();
       struct statementNode * parse_if_stmt();
@@ -73,8 +73,8 @@ struct statementNode * parse_program_and_generate_intermediate_representation()
 {
   struct statementNode * program;
   // program = (struct statementNode *)malloc(sizeof(struct statementNode *));
-  program = parse_var_section();
-  program->next = parse_body();
+  parse_var_section();
+  program = parse_body();
   return program;
 }
 
@@ -107,6 +107,7 @@ struct statementNode * parse_id_list()
   {
     id->next = parse_id_list();
   }
+  else ungetToken();
   return id;
 }
 
@@ -119,7 +120,7 @@ struct statementNode * parse_body()
     printf("Error parsing body: LBRACE expected.\n");
     exit(1);
   }
-  body = parse_stmt_list();
+  body = parse_stmt_list(NULL);
   ttype = getToken();
   if (ttype != RBRACE)
   {
@@ -129,15 +130,20 @@ struct statementNode * parse_body()
   return body;
 }
 
-struct statementNode * parse_stmt_list()
+struct statementNode * parse_stmt_list(struct statementNode * prev)
 {
   struct statementNode * stmt_list;
-  stmt_list = parse_stmt(NULL);
+  stmt_list = parse_stmt(prev);
   ttype = getToken();
   ungetToken();
   if (ttype != RBRACE)
   {
     stmt_list->next = parse_stmt_list(stmt_list);
+  }
+  else if (stmt_list->stmt_type == IFSTMT && stmt_list->if_stmt->false_branch == NULL)
+  {
+    stmt_list->if_stmt->false_branch = (struct statementNode *)malloc(sizeof(struct statementNode));
+    stmt_list->if_stmt->false_branch->stmt_type = NOOPSTMT;
   }
   return stmt_list;
 }
@@ -221,6 +227,12 @@ struct statementNode * parse_assign_stmt()
   stmt->assign_stmt = (struct assignmentStatement *)malloc(sizeof(struct assignmentStatement));
   stmt->assign_stmt->lhs = var_find(token);
   ttype = getToken();
+  if (ttype != EQUAL)
+  {
+    printf("Error parsing assign_stmt: EQUAL expected.\n");
+    exit(1);
+  }
+  ttype = getToken();
   if (ttype == NUM)
   {
     stmt->assign_stmt->op1 = (struct varNode *)malloc(sizeof(struct varNode));
@@ -255,11 +267,13 @@ struct statementNode * parse_assign_stmt()
       exit(1);
     }
   }
-  else if (ttype == SEMICOLON)
+  else
   {
+    ungetToken();
     stmt->assign_stmt->op = 0;
   }
-  else
+  ttype = getToken();
+  if (ttype != SEMICOLON)
   {
     printf("Error parsing assign_stmt: SEMICOLON expected.\n");
     exit(1);
@@ -310,12 +324,12 @@ struct statementNode * parse_if_stmt()
   ttype = getToken();
   if (ttype == NUM)
   {
-    stmt->if_stmt->op1 = (struct varNode *)malloc(sizeof(struct varNode));
-    stmt->if_stmt->op1->value = atoi(token);
+    stmt->if_stmt->op2 = (struct varNode *)malloc(sizeof(struct varNode));
+    stmt->if_stmt->op2->value = atoi(token);
   }
   else if (ttype == ID)
   {
-    stmt->if_stmt->op1 = var_find(token);
+    stmt->if_stmt->op2 = var_find(token);
   }
   else
   {
