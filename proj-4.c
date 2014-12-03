@@ -69,6 +69,8 @@ struct statementNode * parse_body();
       struct statementNode * parse_switch_stmt();
         struct statementNode * parse_case_list(struct varNode *);
 
+void fix_true_branch(struct statementNode *, struct statementNode *);
+
 struct statementNode * parse_program_and_generate_intermediate_representation()
 {
   struct statementNode * program;
@@ -140,10 +142,13 @@ struct statementNode * parse_stmt_list(struct statementNode * prev)
   {
     stmt_list->next = parse_stmt_list(stmt_list);
   }
-  else if (stmt_list->stmt_type == IFSTMT && stmt_list->if_stmt->false_branch == NULL)
+  else if (stmt_list->stmt_type == IFSTMT)
   {
-    stmt_list->if_stmt->false_branch = (struct statementNode *)malloc(sizeof(struct statementNode));
-    stmt_list->if_stmt->false_branch->stmt_type = NOOPSTMT;
+    if (stmt_list->if_stmt->false_branch == NULL)
+    {
+      stmt_list->if_stmt->false_branch = (struct statementNode *)malloc(sizeof(struct statementNode));
+      stmt_list->if_stmt->false_branch->stmt_type = NOOPSTMT;
+    }
   }
   return stmt_list;
 }
@@ -180,6 +185,7 @@ struct statementNode * parse_stmt(struct statementNode * prev)
     if (prev->stmt_type == IFSTMT)
     {
       prev->if_stmt->false_branch = stmt;
+      fix_true_branch(prev->if_stmt->true_branch, stmt);
     }
     else if (prev->stmt_type == SWITCH)
     {
@@ -424,10 +430,12 @@ struct statementNode * parse_while_stmt()
     exit(1);
   }
   stmt->if_stmt->true_branch = parse_body();
-  stmt->next = (struct statementNode *)malloc(sizeof(struct statementNode));
-  stmt->next->stmt_type = GOTOSTMT;
-  stmt->next->goto_stmt = (struct gotoStatement *)malloc(sizeof(struct gotoStatement));
-  stmt->next->goto_stmt->target = stmt;
+  struct statementNode * gotoNode;
+  gotoNode = (struct statementNode *)malloc(sizeof(struct statementNode));
+  gotoNode->stmt_type = GOTOSTMT;
+  gotoNode->goto_stmt = (struct gotoStatement *)malloc(sizeof(struct gotoStatement));
+  gotoNode->goto_stmt->target = stmt;
+  fix_true_branch(stmt->if_stmt->true_branch, gotoNode);
   return stmt;
 }
 
@@ -520,4 +528,15 @@ struct statementNode * parse_case_list(struct varNode * var)
     stmt->if_stmt->true_branch = stmt->next;
   }
   return stmt;
+}
+
+void fix_true_branch(struct statementNode * trueNode, struct statementNode * next)
+{
+  while (trueNode->next != NULL) trueNode = trueNode->next;
+  trueNode->next = next;
+  if (trueNode->stmt_type == IFSTMT)
+  {
+    trueNode->if_stmt->false_branch = next;
+    fix_true_branch(trueNode->if_stmt->true_branch, next);
+  }
 }
