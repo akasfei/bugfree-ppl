@@ -3,6 +3,8 @@
 #include <string.h>
 #include "compiler.h"
 
+int switchFlag;
+
 struct global_var
 {
   struct varNode * node;
@@ -175,6 +177,7 @@ struct statementNode * parse_stmt(struct statementNode * prev)
       break;
     case SWITCH:
       stmt = parse_switch_stmt();
+      switchFlag = 1;
       break;
     default:
       printf("Error parsing statement: ID | IF | PRINT | WHILE | SWITCH expected.\n");
@@ -182,22 +185,17 @@ struct statementNode * parse_stmt(struct statementNode * prev)
   }
   if (prev != NULL)
   {
-    if (prev->stmt_type == IFSTMT)
-    {
-      prev->if_stmt->false_branch = stmt;
-      fix_true_branch(prev->if_stmt->true_branch, stmt);
-    }
-    else if (prev->stmt_type == SWITCH)
+    if (switchFlag == 2)
     {
       int hasDefault = 1;
       struct statementNode * caseNode, * caseBody;
+      switchFlag = 0;
       caseNode = prev;
       // Add goto to every case body
-      while (caseNode != NULL || caseNode->if_stmt != NULL)
+      while (caseNode != NULL && caseNode->stmt_type == IFSTMT)
       {
         caseBody = caseNode->if_stmt->false_branch;
-        while (caseBody->next != NULL) caseBody = caseBody->next;
-        caseBody->next = stmt;
+        fix_true_branch(caseBody, stmt);
         if (caseNode->if_stmt->true_branch == NULL)
         {
           caseNode->if_stmt->true_branch = stmt;
@@ -214,7 +212,13 @@ struct statementNode * parse_stmt(struct statementNode * prev)
         caseBody->next = stmt;
       }
     }
+    else if (prev->stmt_type == IFSTMT)
+    {
+      prev->if_stmt->false_branch = stmt;
+      fix_true_branch(prev->if_stmt->true_branch, stmt);
+    }
   }
+  if (switchFlag) switchFlag = 2;
   stmt->next = NULL;
   return stmt;
 }
@@ -451,6 +455,7 @@ struct statementNode * parse_switch_stmt()
     exit(1);
   }
   // ID
+  ttype = getToken();
   if (ttype != ID)
   {
     printf("Error parsing switch_stmt: ID expected.\n");
@@ -459,6 +464,7 @@ struct statementNode * parse_switch_stmt()
   struct varNode * var;
   var = var_find(token);
   // LBRACE
+  ttype = getToken();
   if (ttype != LBRACE)
   {
     printf("Error parsing switch_stmt: LBRACE expected.\n");
@@ -467,6 +473,7 @@ struct statementNode * parse_switch_stmt()
   // CASES
   stmt = parse_case_list(var);
   // RBRACE
+  ttype = getToken();
   if (ttype != RBRACE)
   {
     printf("Error parsing switch_stmt: RBRACE expected.\n");
@@ -508,12 +515,12 @@ struct statementNode * parse_case_list(struct varNode * var)
   }
   // NOTEQUAL + FALSE = TRUE
   stmt->if_stmt->false_branch = parse_body();
+  stmt->if_stmt->true_branch = NULL;
   ttype = getToken();
   ungetToken();
   if (ttype == CASE)
   {
-    stmt->next = parse_case_list(var);
-    stmt->if_stmt->true_branch = stmt->next;
+    stmt->if_stmt->true_branch = parse_case_list(var);
   }
   else if (ttype == DEFAULT)
   {
@@ -524,8 +531,9 @@ struct statementNode * parse_case_list(struct varNode * var)
       printf("Error parsing case_list: COLON expected.\n");
       exit(1);
     }
-    stmt->next = parse_body();
-    stmt->if_stmt->true_branch = stmt->next;
+    stmt->if_stmt->true_branch = (struct statementNode *)malloc(sizeof(struct statementNode));
+    stmt->if_stmt->true_branch->stmt_type = NOOPSTMT;
+    stmt->if_stmt->true_branch->next = parse_body();
   }
   return stmt;
 }
