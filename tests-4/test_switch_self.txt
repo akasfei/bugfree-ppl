@@ -1,0 +1,15 @@
+i;
+{
+  i = 1 ;
+  print i;
+  i = 2;
+  i = 3;
+  i = 2;
+  SWITCH i
+  {
+    CASE 1: { i = 3; }
+    CASE 2: { i = 4; }
+    DEFAULT: { i = 0;  }
+  }
+  print i;
+}

@@ -1,0 +1,21 @@
+i, j;
+{
+  i = 3 ;
+  j = 0;
+  print j;
+  print i;
+  WHILE i > 0
+  {
+  SWITCH i
+  {
+    CASE 2: { j = 22; }
+    CASE 3: { j = 33; }
+    DEFAULT: {
+      IF j > 10 { j = j - 10; }
+    }
+  }
+  i = i - 1;
+  print j;
+  }
+  print i;
+}
